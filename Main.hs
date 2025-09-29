@@ -12,13 +12,13 @@ import Define (State(..),Switch(..))
 import Initialize (initState)
 
 showTouch :: MonadIO m => [Touch] -> m () 
+showTouch [] = return ()
 showTouch (Touch idn tar pag cli scr:xs) = do
   let s = "idintifier:" ++ show idn ++ " target:" ++ " " ++ 
-          " pageCoords:" ++ show pag ++ "clientCoords:" ++ show cli ++ 
-          "screenCoords:" ++ show scr
+          " pageCoords:" ++ show pag ++ " clientCoords:" ++ show cli ++ 
+          " screenCoords:" ++ show scr
   liftIO $ putStrLn s  
   showTouch xs
-
 
 playAudio :: Audio -> State -> IO State 
 playAudio audio st = do
@@ -43,7 +43,7 @@ main = do
   onEvent ce TouchStart $ \(TouchData a b c) -> do
     mapM_ showTouch [a,b,c] 
     readIORef state >>= tcStart >>= writeIORef state
-  onEvent ce TouchEnd $ \(TouchData a b c) -> do
+  onEvent ce TouchEnd $ \(TouchData {}) -> do
     readIORef state >>= touchIsTrue >>= writeIORef state
     setTimer (Once 100) $ readIORef state >>= tcEnd >>= writeIORef state
     return ()
