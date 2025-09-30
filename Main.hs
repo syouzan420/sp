@@ -40,9 +40,11 @@ main = do
     readIORef state >>= inputLoop c ci bmps kc >>= writeIORef state
   onEvent ce Click $ \(MouseData xy _ _) -> do
     readIORef state >>= playAudio a >>= mouseClick c ci bmps xy >>= writeIORef state
-  onEvent ce TouchStart $ \(TouchData a b c) -> do
-    mapM_ showTouch [a,b,c] 
+  onEvent ce TouchStart $ \(TouchData a _ _) -> do
+    showTouch a 
     readIORef state >>= tcStart >>= writeIORef state
+  onEvent ce TouchMove $ \ (TouchData a _ _) -> do
+    showTouch a
   onEvent ce TouchEnd $ \(TouchData {}) -> do
     readIORef state >>= touchIsTrue >>= writeIORef state
     setTimer (Once 100) $ readIORef state >>= tcEnd >>= writeIORef state
