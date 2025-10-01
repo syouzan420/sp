@@ -69,6 +69,7 @@ data State = State {player:: !Play,
                     rtl:: ![Int],   -- Rekisi timer log
                     chr:: !Chara, -- Character number (i,i)
                     tic:: !Int,   -- timer tic
+                    tccs:: ![[(Int,Int)]], -- touch coords
                     swc:: !Switch,
                     db:: !String    --for debug
                    } deriving (Eq,Show)

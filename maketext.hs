@@ -62,7 +62,7 @@ makeMapData str = let (m:d:_) = sepByChar '`' str
                    in (mn,map reverse (transpose mp),map reverse (transpose da))
 
 footer2 :: [String] -> String
-footer2 cns = "stages :: [Stage]\nstages = ["++tail (getStages cns) ++"]\n\n"
+footer2 cns = "stages :: [Stage]\nstages = ["++drop 1 (getStages cns) ++"]\n\n"
               ++ "evts :: [Evt]\nevts = []\n\n" 
               ++ "players :: [Char]\nplayers = " ++ show (getPlayer cns '@') ++ "\n\n"
               ++ "initPos :: [Pos]\ninitPos = " ++ show (getInitPos cns) ++"\n\n"
@@ -147,14 +147,14 @@ makeMode (x:xs)
 makeMap' :: [String] -> String
 makeMap' [] = [] 
 makeMap' (x:xs)
-  | x=="" = "`"++ tail (makeMode xs)
+  | x=="" = "`"++ drop 1 (makeMode xs)
   | otherwise = ","++x++makeMap' xs
 
 makeMap :: [String] -> [String]
 makeMap [] = []
 makeMap a@(x:xs)
   |x=="" = makeMap xs
-  |length x > 3 && take 3 x == "map" && last x == ':' = tail (makeMap' a):makeMap xs
+  |length x > 3 && take 3 x == "map" && last x == ':' = drop 1 (makeMap' a):makeMap xs
   |otherwise = makeMap xs
   
 

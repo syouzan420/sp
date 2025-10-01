@@ -10,7 +10,7 @@ initState = State {player=initPlayer, sz=igs, msg=initMsg, ems=[]
                   ,evt=evts, ecs=replicate (length evts) 0, mem=[]
                   ,mps=(0,0), mct=0, mcl=0, msc=0, jps= -1
                   ,chd=[], chn=0, rek=[], rdt=[], rtc=0, rtl=[], chr=(4,0), tic=0
-                  ,swc=initSwitch, db=""}
+                  ,tccs=[], swc=initSwitch, db=""}
                      where igs = head gridSize
 
 initPlayer :: Play

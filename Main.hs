@@ -6,10 +6,25 @@ import Haste.DOM (document,elemById,fromElem)
 import Haste.Audio (play,Audio)
 import Control.Monad.IO.Class (MonadIO,liftIO)
 import Data.IORef(newIORef,readIORef,writeIORef)
-import CvLoop (inputLoop,mouseClick,timerEvent)
+import Loop (inputLoop,mouseClick,timerEvent)
 import Browser (getCanvasInfo,cvRatio,tcStart,tcEnd,touchIsTrue,setBmps,setAudio)
 import Define (State(..),Switch(..))
 import Initialize (initState)
+
+getCoords :: [Touch] -> [(Int,Int)]
+getCoords = map (\(Touch _ _ _ cli _) -> cli)
+
+addCoords :: [Touch] -> State -> State
+addCoords tcs st = st{tccs=tccs st++[getCoords tcs]}
+
+delCoords :: State -> State
+delCoords st = st{tccs=[]}
+
+showCoords :: MonadIO m => State -> m State
+showCoords st = liftIO $ print (tccs st) >> return st
+
+showTouch2 :: MonadIO m => [Touch] -> m ()
+showTouch2 tcs = liftIO $ print (getCoords tcs)
 
 showTouch :: MonadIO m => [Touch] -> m () 
 showTouch [] = return ()
@@ -41,12 +56,13 @@ main = do
   onEvent ce Click $ \(MouseData xy _ _) -> do
     readIORef state >>= playAudio a >>= mouseClick c ci bmps xy >>= writeIORef state
   onEvent ce TouchStart $ \(TouchData a _ _) -> do
-    showTouch a 
-    readIORef state >>= tcStart >>= writeIORef state
+    showTouch2 a 
+    readIORef state >>= tcStart >>= writeIORef state . delCoords
   onEvent ce TouchMove $ \ (TouchData a _ _) -> do
-    showTouch a
+    showTouch2 a
+    readIORef state >>= writeIORef state . addCoords a
   onEvent ce TouchEnd $ \(TouchData {}) -> do
-    readIORef state >>= touchIsTrue >>= writeIORef state
+    readIORef state >>= showCoords >>= touchIsTrue >>= writeIORef state
     setTimer (Once 100) $ readIORef state >>= tcEnd >>= writeIORef state
     return ()
   setTimer (Repeat 50) $
