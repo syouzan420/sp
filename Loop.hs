@@ -1,4 +1,4 @@
-module Loop (inputLoop,mouseClick,timerEvent) where
+module Loop (inputLoop,mouseClick,timerEvent,touchEvent) where
 
 import Haste.Graphics.Canvas(Canvas,Bitmap)
 import Haste.Audio
@@ -13,11 +13,11 @@ import Stages(stages,players,initPos,gridSize)
 import Grid(checkGrid,makeGrid)
 import Browser(chColors,clFields,flToKc,fields,cvRatio,localStore,stringToJson)
 import OutToCanvas(putMessageG,putMessageT,putGrid,putMoziCl,clearMessage
-                  ,putPlayer,putMozi,putWst,putChara)
+                  ,putPlayer,putMozi,putWst,putChara,drawTouched)
 import Check(checkEv,getMessage)
 import Libs(getRandomNumIO,sepByChar)
 import Action(keyCodeToChar,keyChoice,keyCheck,putOut,plMove,makeChoiceMessage
-             ,mkDir)
+             ,mkDir,touchRead)
 import Event(makeEvent)
 import EReki (Rdt(..), reki)
 
@@ -27,6 +27,12 @@ type PlPos = Pos
 type ChPos = Pos
 type TxPos = Pos
 data Positions = Ps GrPos PlPos ChPos TxPos
+
+touchEvent :: CInfo -> State -> IO State
+touchEvent ci st = do
+  let tcs = tccs st  
+  if null tcs then return st else  print (touchRead ci tcs) >> return (st{tccs=[]})
+
 
 getPos :: CInfo -> State -> Positions
 getPos ((cvW,cvH),_) st =
@@ -41,37 +47,16 @@ getPos ((cvW,cvH),_) st =
 timerEvent :: Canvas -> CInfo -> Bmps -> State -> IO State
 timerEvent c ci bmps st = do
   let ticSt = tic st
-      rtcSt = rtc st
       sw = swc st
       t = if ticSt > 298 then 0 else ticSt+1
-      isChrUpdate = ism  sw && t `mod` 10 == 0 && not (ims sw) 
-      nrtc = if null (rdt st) || t `mod` 20 /=0 then rtcSt else rtcSt + 1
-      rst = if nrtc==30 then rekiHint st else st
-      nst = rst{tic=t,rtc=nrtc}
-  if igc sw then return nst else
-      if isChrUpdate then drawUpdate c ci bmps nst else putMessageG c ci bmps nst
+      nst = st{tic=t}
+  drawUpdate c ci bmps nst 
 
 drawUpdate :: Canvas -> CInfo -> Bmps -> State -> IO State 
-drawUpdate c ci@((cvW,cvH),_) bmps st = do
-  let (_,chrs,_) = bmps
-      (chNum,anNum) = chr st
-      t = tic st
-      anNum'
-        | t `mod` 10 /= 0 = anNum
-        | even anNum = anNum + 1
-        | otherwise = anNum - 1
-      chrIndex = chNum*8+anNum'
-      nst = st{chr=(chNum,anNum')}
-      p = player nst
-      grid = gr p 
-      (Ps grPos plPos chPos txPos) = getPos ci nst
-  putGrid c grPos grid 
-  putPlayer c plPos p
-  unless ((ims . swc) nst) $  putMessageT c cvH txPos (msg nst)
-  when ((ich . swc) nst) $ putMessageT c cvH txPos (makeChoiceMessage (msg nst) (map fst (chd nst)) (chn nst)) 
-  unless (null (rdt nst)) $ putMozi c (chColors!!1) (1,1) (show (rtc nst))
-  putChara c chrs cvW chPos chrIndex 
-  return nst
+drawUpdate c ci bmps st = do
+  let tcs = tccs st
+  drawTouched c ci tcs 
+  return st
 
 mouseClick :: Canvas -> CInfo -> Bmps -> (Int,Int) -> State -> IO State
 mouseClick c ci bmps (x,y) = do

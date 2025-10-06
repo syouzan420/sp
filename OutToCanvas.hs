@@ -1,9 +1,12 @@
 module OutToCanvas(putMessageG,putMessageT,putGrid,putMoziCl,putPlayer
-                  ,clearMessage,putMozi,putWst,putChara) where
+                  ,clearMessage,putMozi,putWst,putChara,drawTouched) where
 
-import Haste.Graphics.Canvas(Canvas,Color(RGB),Bitmap,color,font,translate,rotate
-                            ,text,draw,scale,render,renderOnTop)
+import Haste.Graphics.Canvas(Canvas,Color(RGB),Bitmap,Point,color,font,translate
+                            ,rotate,text,draw,scale,render,renderOnTop
+                            ,opacity,lineWidth,stroke,path)
 import Control.Monad (when)
+import Data.List (transpose)
+import Data.Bifunctor (bimap)
 import Define (miy,wg,hg,wt,ht,cvT,nfs,rfs
               ,State(..),Play(..),Switch(..),CInfo,Grid,Pos
               ,Mode(..),Msg,Fsize,wstIndex)
@@ -12,6 +15,16 @@ import PrepOutput(prepMessage,prepNormal,prepShowMap,prepLet,prepLetters,nextPQ)
 import Libs(getIndex)
 
 type Bmps = ([Bitmap],[Bitmap],[Bitmap])
+
+drawTouched :: Canvas -> CInfo -> [[Pos]] -> IO ()
+drawTouched c ci cds = do 
+  let tcds = transpose cds
+  let todb = map (bimap fromIntegral fromIntegral)
+  mapM_ (drawPath c ci . todb) tcds
+
+drawPath :: Canvas -> CInfo -> [Point] -> IO ()
+drawPath c _ pos = renderOnTop c $ 
+  opacity 0.5 $ color (chColors!!3) $ lineWidth 10 $ stroke $ path pos 
 
 putMessageG :: Canvas -> CInfo -> Bmps -> State -> IO State
 putMessageG c ((cvW,cvH),_) bmps st = do 

@@ -1,13 +1,33 @@
 module Action(keyCodeToChar,keyChoice,keyCheck,putOut,plMove
-             ,makeChoiceMessage,mkDir) where
+             ,makeChoiceMessage,mkDir,touchRead) where
 
-import Define(State(..),Play(..),Switch(..),Mode(..),Dir(..),Pos,Size,Grid,Msg)
+import Data.List (transpose)
+import Define(State(..),Play(..),Switch(..),Mode(..),Dir(..)
+             ,Pos,Size,Grid,Msg,CInfo)
 import Stages(stages,players,initPos,gridSize,idef,evts)
 import FiFunc(funcPon,stagePon,doNothing)
 import Grid(intoGrid,fromGrid,sizeGrid,makeGrid)
 import Messages(initMsg)
 import Check(checkDef,checkEq)
 import Libs(getIndex,getRandomNum)
+
+touchRead :: CInfo -> [[Pos]] -> [Char]
+touchRead ((cW,cH),_) cds = 
+  let cH2 = cH/2 
+      cH4 = cH/4
+      cH8 = cH/8
+      tcds = transpose cds
+      xys = map unzip tcds
+      (maxXs,minXs) = (map (maximum.fst) xys,map (minimum.fst)  xys)
+      (maxYs,minYs) = (map (maximum.snd) xys,map (minimum.snd) xys)
+      dxs = zipWith (\maxX minX -> fromIntegral $ maxX - minX) maxXs minXs
+      dys = zipWith (\maxY minY -> fromIntegral $ maxY - minY) maxYs minYs
+      chs = zipWith toch dxs dys
+      toch dx dy
+       | dx<20 && dy>cH8 && dy<cH2 = '|'
+       | otherwise = '?'
+   in chs
+
 
 keyCheck :: Size -> Pos -> Char -> Pos 
 keyCheck (wd,hi) (x,y) ch  
