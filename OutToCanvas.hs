@@ -16,15 +16,18 @@ import Libs(getIndex)
 
 type Bmps = ([Bitmap],[Bitmap],[Bitmap])
 
+todb :: [Pos] -> [Point]
+todb = map (bimap fromIntegral fromIntegral)
+
 drawTouched :: Canvas -> CInfo -> [[Pos]] -> IO ()
 drawTouched c ci cds = do 
   let tcds = transpose cds
-  let todb = map (bimap fromIntegral fromIntegral)
-  mapM_ (drawPath c ci . todb) tcds
+  drawPaths c ci tcds
 
-drawPath :: Canvas -> CInfo -> [Point] -> IO ()
-drawPath c _ pos = renderOnTop c $ 
-  opacity 0.5 $ color (chColors!!3) $ lineWidth 10 $ stroke $ path pos 
+drawPaths :: Canvas -> CInfo -> [[Pos]] -> IO ()
+drawPaths c _ tcds = render c $ 
+  mapM_ (opacity 0.5 . color (chColors!!3)
+                           . lineWidth 10 . stroke . path . todb) tcds 
 
 putMessageG :: Canvas -> CInfo -> Bmps -> State -> IO State
 putMessageG c ((cvW,cvH),_) bmps st = do 

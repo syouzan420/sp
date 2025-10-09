@@ -28,11 +28,14 @@ type ChPos = Pos
 type TxPos = Pos
 data Positions = Ps GrPos PlPos ChPos TxPos
 
-touchEvent :: CInfo -> State -> IO State
-touchEvent ci st = do
+touchEvent :: Canvas -> CInfo -> State -> IO State
+touchEvent c ci st = do
   let tcs = tccs st  
-  if null tcs then return st else  print (touchRead ci tcs) >> return (st{tccs=[]})
-
+  if null tcs then return st else do
+       let str = touchRead ci tcs
+       print (touchRead ci tcs)
+       putMozi c (chColors!!3) (2,2) str
+       return st
 
 getPos :: CInfo -> State -> Positions
 getPos ((cvW,cvH),_) st =
@@ -55,7 +58,11 @@ timerEvent c ci bmps st = do
 drawUpdate :: Canvas -> CInfo -> Bmps -> State -> IO State 
 drawUpdate c ci bmps st = do
   let tcs = tccs st
-  drawTouched c ci tcs 
+  let sw = swc st
+  let istc = itc sw
+  let str = touchRead ci tcs 
+  drawTouched c ci tcs
+  putMozi c (chColors!!3) (2,2) str
   return st
 
 mouseClick :: Canvas -> CInfo -> Bmps -> (Int,Int) -> State -> IO State

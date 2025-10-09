@@ -17,6 +17,9 @@ getCoords = map (\(Touch _ _ _ cli _) -> cli)
 addCoords :: [Touch] -> State -> State
 addCoords tcs st = st{tccs=tccs st++[getCoords tcs]}
 
+delCoords :: State -> State
+delCoords st = st{tccs=[]}
+
 showCoords :: MonadIO m => State -> m State
 showCoords st = liftIO $ print (tccs st) >> return st
 
@@ -54,12 +57,13 @@ main = do
 --    readIORef state >>= playAudio a >>= mouseClick c ci bmps xy >>= writeIORef state
   onEvent ce TouchStart $ \(TouchData a _ _) -> do
     showTouch2 a 
-    readIORef state >>= tcStart >>= writeIORef state
+    readIORef state >>= tcStart >>= writeIORef state . delCoords
   onEvent ce TouchMove $ \ (TouchData a _ _) -> do
     showTouch2 a
     readIORef state >>= writeIORef state . addCoords a
   onEvent ce TouchEnd $ \(TouchData {}) -> do
-    readIORef state >>= showCoords >>= touchEvent ci >>= touchIsTrue >>= writeIORef state
+    readIORef state >>= showCoords >>= touchEvent c ci
+                                   >>= touchIsTrue >>= writeIORef state
     setTimer (Once 100) $ readIORef state >>= tcEnd >>= writeIORef state
     return ()
   setTimer (Repeat 50) $
