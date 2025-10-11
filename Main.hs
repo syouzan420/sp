@@ -14,17 +14,28 @@ import Initialize (initState)
 getCoords :: [Touch] -> [(Int,Int)]
 getCoords = map (\(Touch _ _ _ cli _) -> cli)
 
+addTouch :: State -> State
+addTouch st = st {tco = tco st + 1}
+
 addCoords :: [Touch] -> State -> State
 addCoords tcs st = st{tccs=tccs st++[getCoords tcs]}
 
-delCoords :: State -> State
-delCoords st = st{tccs=[]}
+delTouch :: State -> State
+delTouch st = let ntco = tco st - 1
+                  nst = st{tco=ntco}
+               in if ntco==0 then nst{tccs=[]} else nst
 
 showCoords :: MonadIO m => State -> m State
 showCoords st = liftIO $ print (tccs st) >> return st
 
 showTouch2 :: MonadIO m => [Touch] -> m ()
 showTouch2 tcs = liftIO $ print (getCoords tcs)
+
+showTouchStart :: MonadIO m => m ()
+showTouchStart = liftIO $ putStrLn "touchStart"
+
+showTouchEnd :: MonadIO m => m ()
+showTouchEnd = liftIO $ putStrLn "touchEnd"
 
 showTouch :: MonadIO m => [Touch] -> m () 
 showTouch [] = return ()
@@ -56,14 +67,14 @@ main = do
 --  onEvent ce Click $ \(MouseData xy _ _) -> do
 --    readIORef state >>= playAudio a >>= mouseClick c ci bmps xy >>= writeIORef state
   onEvent ce TouchStart $ \(TouchData a _ _) -> do
-    showTouch2 a 
-    readIORef state >>= tcStart >>= writeIORef state . delCoords
+    showTouchStart
+    readIORef state >>= tcStart >>= writeIORef state . addTouch
   onEvent ce TouchMove $ \ (TouchData a _ _) -> do
-    showTouch2 a
     readIORef state >>= writeIORef state . addCoords a
   onEvent ce TouchEnd $ \(TouchData {}) -> do
+    showTouchEnd
     readIORef state >>= showCoords >>= touchEvent c ci
-                                   >>= touchIsTrue >>= writeIORef state
+                    >>= touchIsTrue >>= writeIORef state . delTouch
     setTimer (Once 100) $ readIORef state >>= tcEnd >>= writeIORef state
     return ()
   setTimer (Repeat 50) $
